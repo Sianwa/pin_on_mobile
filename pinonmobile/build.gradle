@@ -71,4 +71,14 @@ dependencies {
     implementation 'com.google.android.gms:play-services-auth:17.0.0'
     implementation 'com.google.android.gms:play-services-auth-api-phone:17.4.0'
 
+    // Litho
+    implementation 'com.facebook.litho:litho-core:0.41.1'
+    implementation 'com.facebook.litho:litho-widget:0.41.1'
+    annotationProcessor 'com.facebook.litho:litho-processor:0.41.1'
+
+    // SoLoader
+    implementation 'com.facebook.soloader:soloader:0.9.0'
+
+    // Testing Litho
+    testImplementation 'com.facebook.litho:litho-testing:0.41.1'
 }
