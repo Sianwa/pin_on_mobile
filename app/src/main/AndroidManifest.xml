@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.interswitchgroup.pinonmobile">
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -20,6 +21,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <meta-data
+            android:name="interswitch-kenya-limited.pin_on_mobile.base_url"
+            android:value="https://testids.interswitch.co.ke/identity/api/v1/"/>
     </application>
 
 </manifest>
