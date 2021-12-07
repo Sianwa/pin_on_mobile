@@ -11,6 +11,7 @@ import com.interswitchgroup.pinonmobile.api.services.GetSessionKey;
 import com.interswitchgroup.pinonmobile.di.DaggerWrapper;
 import com.interswitchgroup.pinonmobile.models.Account;
 import com.interswitchgroup.pinonmobile.models.Institution;
+import com.interswitchgroup.pinonmobile.ui.PinOnMobileActivity;
 
 import java.io.IOException;
 import java.security.PublicKey;
@@ -105,7 +106,7 @@ public class PinOnMobile {
 
     public void launchUI(){
         //pass props here
-        Intent intent = new Intent(activity,PinOnMobileActivity.class);
+        Intent intent = new Intent(activity, PinOnMobileActivity.class);
 //        intent.putExtra("Institution", singletonIdentityInstance.institution);
 //        intent.putExtra("account",singletonIdentityInstance.account);
         activity.startActivity(intent);

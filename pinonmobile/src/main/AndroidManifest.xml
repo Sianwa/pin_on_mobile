@@ -4,7 +4,7 @@
 
     <application>
         <activity
-            android:name=".PinOnMobileActivity"
+            android:name=".ui.PinOnMobileActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:exported="false"
             android:label="@string/title_activity_pin_on_mobile"
