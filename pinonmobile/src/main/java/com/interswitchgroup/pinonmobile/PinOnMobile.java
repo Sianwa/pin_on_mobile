@@ -1,14 +1,21 @@
 package com.interswitchgroup.pinonmobile;
 
+import static com.interswitchgroup.pinonmobile.encryption.Encryption.getKeyFromString;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.util.Log;
 
+import com.interswitchgroup.pinonmobile.api.models.EncryptedPayload;
 import com.interswitchgroup.pinonmobile.api.models.GenerateMLEKeyResponse;
+import com.interswitchgroup.pinonmobile.api.models.GeneratePinSelectOTPPayload;
 import com.interswitchgroup.pinonmobile.api.models.GenerateSessionKeyResponse;
+import com.interswitchgroup.pinonmobile.api.services.GeneratePinSelectOTP;
 import com.interswitchgroup.pinonmobile.api.services.GetMLEKey;
 import com.interswitchgroup.pinonmobile.api.services.GetSessionKey;
 import com.interswitchgroup.pinonmobile.di.DaggerWrapper;
+import com.interswitchgroup.pinonmobile.encryption.Encryption;
 import com.interswitchgroup.pinonmobile.models.Account;
 import com.interswitchgroup.pinonmobile.models.Institution;
 import com.interswitchgroup.pinonmobile.ui.PinOnMobileActivity;
@@ -16,9 +23,14 @@ import com.interswitchgroup.pinonmobile.ui.PinOnMobileActivity;
 import java.io.IOException;
 import java.security.PublicKey;
 import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 
 import javax.inject.Inject;
 
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
 import retrofit2.Retrofit;
 
 public class PinOnMobile {
@@ -104,11 +116,50 @@ public class PinOnMobile {
         }
     }
 
-    public void launchUI(){
+    public void generatePinSelectOtp(GeneratePinSelectOTPPayload generatePinSelectOTPPayload,String mle, String sesKey) throws Exception {
+
+        // create an encrypted payload
+        EncryptedPayload encryptedPayload = new EncryptedPayload();
+        RSAPublicKey rsaPubKey = (RSAPublicKey) getKeyFromString(this.mleKey);
+        encryptedPayload.setEncData(Encryption.encryptString(rsaPubKey
+                ,generatePinSelectOTPPayload.toString(),mle));
+
+        try {
+            Disposable subscribe = retrofit.create(GeneratePinSelectOTP.class)
+                    .generatePinSelectOTP(encryptedPayload,institution.getKeyId())
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new Consumer<EncryptedPayload>() {
+                        @Override
+                        public void accept(EncryptedPayload encryptedPayload) throws Exception {
+                            //1. Decrypt payload
+                            String dec =  Encryption.getDecryptedPayload(encryptedPayload.getEncData(),institution.getRsaPrivateKey());
+                        }
+                    }, new Consumer<Throwable>() {
+                        @Override
+                        public void accept(Throwable throwable) throws Exception {
+
+                        }
+                    });
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public void generateOtp() throws Exception {
+        Log.d("PinOnMobile","sending sms");
+        GeneratePinSelectOTPPayload generatePinSelectOTPPayload = new GeneratePinSelectOTPPayload();
+        generatePinSelectOTPPayload.setSerno(account.getCardSerialNumber());
+
+        generatePinSelectOtp(generatePinSelectOTPPayload, institution.getRsaPublicKey(),sessionKey);
+    }
+    public void launchUI() throws Exception {
         //pass props here
         Intent intent = new Intent(activity, PinOnMobileActivity.class);
-//        intent.putExtra("Institution", singletonIdentityInstance.institution);
-//        intent.putExtra("account",singletonIdentityInstance.account);
+        intent.putExtra("Institution", singletonPinOnMobileInstance.institution);
+        intent.putExtra("account",singletonPinOnMobileInstance.account);
+        generateOtp();
         activity.startActivity(intent);
     }
 

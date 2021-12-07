@@ -8,7 +8,7 @@
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:exported="false"
             android:label="@string/title_activity_pin_on_mobile"
-            android:theme="@style/Theme.PinOnMobile.Fullscreen" />
+             />
     </application>
 
 </manifest>

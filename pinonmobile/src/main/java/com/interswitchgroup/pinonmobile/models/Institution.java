@@ -1,6 +1,8 @@
 package com.interswitchgroup.pinonmobile.models;
 
-public class Institution {
+import java.io.Serializable;
+
+public class Institution implements Serializable {
     private String clientId;
     private String clientSecret;
     private Integer institutionId;
