@@ -91,12 +91,13 @@ public class PinOnMobile {
                         .getMLEKey()
                         .execute()
                         .body();
-                return generateMLEKeyResponse.getItem().getKey();
+                if (generateMLEKeyResponse == null) return null;
+                String key = generateMLEKeyResponse.getItem().getKey();
+                return key;
             } catch (IOException e) {
                 e.printStackTrace();
+                return null;
             }
-
-            return null;
         }
     }
 
@@ -111,8 +112,8 @@ public class PinOnMobile {
                 return generateSessionKeyResponse.getItem().getKey();
             } catch (IOException e) {
                 e.printStackTrace();
+                return null;
             }
-            return null;
         }
     }
 
@@ -129,21 +130,16 @@ public class PinOnMobile {
                     .generatePinSelectOTP(encryptedPayload,institution.getKeyId())
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new Consumer<EncryptedPayload>() {
-                        @Override
-                        public void accept(EncryptedPayload encryptedPayload) throws Exception {
-                            //1. Decrypt payload
-                            String dec =  Encryption.getDecryptedPayload(encryptedPayload.getEncData(),institution.getRsaPrivateKey());
-                        }
-                    }, new Consumer<Throwable>() {
-                        @Override
-                        public void accept(Throwable throwable) throws Exception {
+                    .subscribe(encryptedPayload1 -> {
+                        //1. Decrypt payload
+                        String dec =  Encryption.getDecryptedPayload(encryptedPayload1.getEncData(),institution.getRsaPrivateKey());
+                    }, throwable -> {
 
-                        }
                     });
 
         }catch (Exception e){
             e.printStackTrace();
+            throw e;
         }
     }
 
@@ -155,11 +151,11 @@ public class PinOnMobile {
         generatePinSelectOtp(generatePinSelectOTPPayload, institution.getRsaPublicKey(),sessionKey);
     }
     public void launchUI() throws Exception {
+        generateOtp();
         //pass props here
         Intent intent = new Intent(activity, PinOnMobileActivity.class);
         intent.putExtra("Institution", singletonPinOnMobileInstance.institution);
         intent.putExtra("account",singletonPinOnMobileInstance.account);
-        generateOtp();
         activity.startActivity(intent);
     }
 

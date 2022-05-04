@@ -81,4 +81,10 @@ dependencies {
 
     // Testing Litho
     testImplementation 'com.facebook.litho:litho-testing:0.41.1'
+
+
+    //Paystacck otp
+    implementation 'co.paystack.android.design.widget:pinpad:1.0.8'
+
+
 }
