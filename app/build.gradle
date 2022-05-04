@@ -31,6 +31,9 @@ android {
 }
 
 dependencies {
+    def fragment_version = "1.4.1"
+
+    implementation "androidx.fragment:fragment:$fragment_version"
 
     implementation 'androidx.appcompat:appcompat:1.4.0'
     implementation 'com.google.android.material:material:1.4.0'
