@@ -48,4 +48,4 @@ PinOnMobile pinOnMobile = PinOnMobile.getInstance(MainActivity.this,institution,
 
 ## Source code
 
-Visit [the github repository] (https://github.com/interswitch-kenya-limited/pin_on_mobile/tree/main/pinonmobile) to get the source code and releases of this project if you want to try a manual integration process that does not make use of gradle.
+Visit [the github repository](https://github.com/interswitch-kenya-limited/pin_on_mobile/tree/main/pinonmobile) to get the source code and releases of this project if you want to try a manual integration process that does not make use of gradle.
