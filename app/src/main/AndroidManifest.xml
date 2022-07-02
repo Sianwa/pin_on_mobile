@@ -9,6 +9,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
+        android:usesCleartextTraffic="true"
         android:theme="@style/Theme.PinOnMobile">
         <activity
             android:name=".MainActivity"
@@ -23,7 +24,7 @@
         </activity>
         <meta-data
             android:name="interswitch-kenya-limited.pin_on_mobile.base_url"
-            android:value="https://475e-41-215-3-130.ngrok.io/identity/api/v1/"/>
+            android:value="http://192.168.100.2:8001/identity/api/v1/"/>
     </application>
 
 </manifest>

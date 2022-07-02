@@ -30,15 +30,11 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class Encryption {
     public void test (Institution institution, Account account) throws Exception {
-        String desKey = "1D149AB6D530E7F6D7D8148CE7636812";
-
-        PinBlock pinBlock = new PinBlock("1234", desKey, account.getAccountNumber());
-        String pinBlockString = pinBlock.genPinblock();
-        PinBlockPayload pinBlockPayload = new PinBlockPayload(institution.getInstitutionId()
-                ,account.getCardSerialNumber(),pinBlock.genPinblock());
-//        String encPayload = encryptString(institution.getRsaPublicKey(),pinBlockPayload.getPinBlockPayloadString(), keyId);
-
-        System.out.println("Encrypted pinblock =" + pinBlockString);
+//        PinBlockPayload pinBlockPayload = new PinBlockPayload(institution.getInstitutionId()
+//                ,account.getCardSerialNumber(),pinBlock.genPinBlock());
+////        String encPayload = encryptString(institution.getRsaPublicKey(),pinBlockPayload.getPinBlockPayloadString(), keyId);
+//
+//        System.out.println("Encrypted pinblock =" + pinBlockString);
 //        System.out.println("Encrypted payload =" + encPayload);
     }
 

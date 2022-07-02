@@ -1,5 +1,6 @@
 package com.interswitchgroup.pinonmobile.api.models;
 
+import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
@@ -79,5 +80,13 @@ public class GenerateSessionKeyResponse {
     public void setItem(Item item) {
         this.item = item;
     }
+
+    @Override
+    public String toString() {
+        Gson gson = new Gson();
+        String json = gson.toJson(this);
+        return json;
+    }
+
 
 }

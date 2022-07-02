@@ -75,9 +75,8 @@ public class PinBlock {
         byte[] authDataBytes = decryptCipher.doFinal(Hex.decode(clearText.getBytes("UTF-8")));
         return Hex.toHexString(authDataBytes).toUpperCase();
     }
-    public String genPinblock() throws Exception {
+    public String genPinBlock() throws Exception {
         String pinBlock = encodePin(pin, account);
-        System.out.println(pinBlock);
         return encrypt3DES(pinBlock, des3Key);
     }
 }

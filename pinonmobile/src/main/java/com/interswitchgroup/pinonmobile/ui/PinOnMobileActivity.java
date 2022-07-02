@@ -11,98 +11,99 @@ import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowInsets;
+import android.widget.Toast;
 
+import com.interswitchgroup.pinonmobile.PinOnMobile;
 import com.interswitchgroup.pinonmobile.databinding.ActivityPinOnMobileBinding;
 import com.interswitchgroup.pinonmobile.R;
+import com.interswitchgroup.pinonmobile.models.Account;
+import com.interswitchgroup.pinonmobile.models.Institution;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import co.paystack.android.design.widget.PinPadView;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
 public class PinOnMobileActivity extends AppCompatActivity {
-    /**
-     * Whether or not the system UI should be auto-hidden after
-     * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
-     */
-    private static final boolean AUTO_HIDE = true;
-
-    /**
-     * If {@link #AUTO_HIDE} is set, the number of milliseconds to wait after
-     * user interaction before hiding the system UI.
-     */
-    private static final int AUTO_HIDE_DELAY_MILLIS = 3000;
-
-    /**
-     * Some older devices needs a small delay between UI widget updates
-     * and a change of the status and navigation bar.
-     */
-    private static final int UI_ANIMATION_DELAY = 300;
-    private final Handler mHideHandler = new Handler();
-    private View mContentView;
-    private final Runnable mHidePart2Runnable = new Runnable() {
-        @SuppressLint("InlinedApi")
-        @Override
-        public void run() {
-            // Delayed removal of status and navigation bar
-            if (Build.VERSION.SDK_INT >= 30) {
-                mContentView.getWindowInsetsController().hide(
-                        WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
-            } else {
-                // Note that some of these constants are new as of API 16 (Jelly Bean)
-                // and API 19 (KitKat). It is safe to use them, as they are inlined
-                // at compile-time and do nothing on earlier devices.
-                mContentView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
-                        | View.SYSTEM_UI_FLAG_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
-            }
-        }
-    };
-    private View mControlsView;
-    private final Runnable mShowPart2Runnable = new Runnable() {
-        @Override
-        public void run() {
-            // Delayed display of UI elements
-            ActionBar actionBar = getSupportActionBar();
-            if (actionBar != null) {
-                actionBar.show();
-            }
-            mControlsView.setVisibility(View.VISIBLE);
-        }
-    };
-    private boolean mVisible;
-    private final Runnable mHideRunnable = new Runnable() {
-        @Override
-        public void run() {
-            ActionBar actionBar = getSupportActionBar();
-            if (actionBar != null) {
-                actionBar.hide();
-            }
-        }
-    };
-    /**
-     * Touch listener to use for in-layout UI controls to delay hiding the
-     * system UI. This is to prevent the jarring behavior of controls going away
-     * while interacting with activity UI.
-     */
-
     private ActivityPinOnMobileBinding binding;
-
+    List<String> pages = new ArrayList<>();
+    PinOnMobile pinOnMobile;
+    Institution institution;
+    Account account;
+    String otp = "";
+    String newPin = "";
+    String confirmNewPin = "";
+    Integer currentPage = 0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         binding = ActivityPinOnMobileBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+        Bundle extras = getIntent().getExtras();
+        pages.add("Please enter your otp");
+        pages.add("please enter your pin");
+        pages.add("Please confirm your pin");
+        if (extras != null) {
+            this.institution = (Institution) extras.getSerializable("Institution");
+            this.account = (Account) extras.getSerializable("Account");
+            //The key argument here must match that used in the other activity
+        }
+        try {
+            this.pinOnMobile = PinOnMobile.getInstance(this, this.institution, this.account);
+        } catch (Exception e) {
+            Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+            finish();
+        }
+        // loading dialogue + progrees bar
+        // enum of steps
+        // change pin
+        // 1. give me your otp , set new pin , confirm new pin
+        // hii ni ya first pin
+        binding.pinpadView.setOnSubmitListener(new PinPadView.OnSubmitListener() {
+            @Override
+            public void onCompleted(String pin) {
+                // listen for when the "done" button is clicked
+                // and the pin is complete
+                if (currentPage == 0){
+                    otp = pin;
+                }
+                if (currentPage == 1){
+                    newPin = pin;
+                }
+                if (currentPage == 2){
+                    confirmNewPin = pin;
+                }
+                currentPage++;
+                binding.pinpadView.clear();
+                binding.pinpadView.setPromptText(pages.get(currentPage));
+            }
+            // block back button
+            @Override
+            public void onIncompleteSubmit(String pin) {
+                // listen for when the "done" button is clicked
+                // and the pin is incomplete
+                System.out.println("incomplete otp");
+            }
+            });
 
-        mVisible = true;
+
+
     }
 
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
+    }
+
+    @Override
+    public void onBackPressed() {
+        // check current page
+        // if page == 0
     }
 
 

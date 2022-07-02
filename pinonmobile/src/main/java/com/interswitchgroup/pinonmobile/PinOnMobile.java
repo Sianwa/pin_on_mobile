@@ -1,48 +1,41 @@
 package com.interswitchgroup.pinonmobile;
 
-import static com.interswitchgroup.pinonmobile.encryption.Encryption.getKeyFromString;
-
 import android.app.Activity;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.util.Log;
 
-import com.interswitchgroup.pinonmobile.api.models.EncryptedPayload;
-import com.interswitchgroup.pinonmobile.api.models.GenerateMLEKeyResponse;
+import com.google.gson.Gson;
 import com.interswitchgroup.pinonmobile.api.models.GeneratePinSelectOTPPayload;
 import com.interswitchgroup.pinonmobile.api.models.GenerateSessionKeyResponse;
-import com.interswitchgroup.pinonmobile.api.services.GeneratePinSelectOTP;
-import com.interswitchgroup.pinonmobile.api.services.GetMLEKey;
-import com.interswitchgroup.pinonmobile.api.services.GetSessionKey;
+import com.interswitchgroup.pinonmobile.api.models.PinSelectPayload;
+import com.interswitchgroup.pinonmobile.api.tasks.GeneratePinSelect;
+import com.interswitchgroup.pinonmobile.api.tasks.GeneratePinSelectOtp;
+import com.interswitchgroup.pinonmobile.api.tasks.GetMLETask;
+import com.interswitchgroup.pinonmobile.api.tasks.GetSessionKeyTask;
 import com.interswitchgroup.pinonmobile.di.DaggerWrapper;
-import com.interswitchgroup.pinonmobile.encryption.Encryption;
+import com.interswitchgroup.pinonmobile.interfaces.FailureCallback;
+import com.interswitchgroup.pinonmobile.interfaces.SuccessCallback;
 import com.interswitchgroup.pinonmobile.models.Account;
 import com.interswitchgroup.pinonmobile.models.Institution;
+import com.interswitchgroup.pinonmobile.models.Keys;
+import com.interswitchgroup.pinonmobile.models.PinBlock;
 import com.interswitchgroup.pinonmobile.ui.PinOnMobileActivity;
 
-import java.io.IOException;
-import java.security.PublicKey;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
+import java.io.Serializable;
 
 import javax.inject.Inject;
 
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Consumer;
-import io.reactivex.schedulers.Schedulers;
 import retrofit2.Retrofit;
 
-public class PinOnMobile {
+public class PinOnMobile implements Serializable {
     private static PinOnMobile singletonPinOnMobileInstance;
     private Retrofit retrofit;
     private Institution institution;
-    private String mleKey;
-    private String sessionKey;
+    private Keys keys;
     private Account account;
-    private PublicKey publicKey;
-    private RSAPrivateKey rsaPrivateKey;
     private Activity activity;
+    private FailureCallback failureCallback;
+    private SuccessCallback successCallback;
 
     @Inject
     public void setRetrofit(Retrofit retrofit) {
@@ -58,105 +51,92 @@ public class PinOnMobile {
             DaggerWrapper.getComponent(activity,institution).inject(singletonPinOnMobileInstance);
         }
         // create a class for keys
-        if (singletonPinOnMobileInstance.mleKey == null || singletonPinOnMobileInstance.sessionKey == null){
+        if (singletonPinOnMobileInstance.keys == null){
             singletonPinOnMobileInstance.initializeIdentityServiceConfig();
         }
         return singletonPinOnMobileInstance;
     }
 
-    public void changePin(Activity activity){
-        System.out.println("activity");
-    }
-
     private void initializeIdentityServiceConfig() throws Exception {
-        String mleKeyResponse = new GetMLETask().execute().get();
+        this.keys  = new Keys();
+        String mleKeyResponse = new GetMLETask(singletonPinOnMobileInstance.retrofit).execute().get();
         if(mleKeyResponse != null) {
-            mleKey = mleKeyResponse;
+            keys.setMleKey(mleKeyResponse);
         } else {
             throw new Exception("failed to get mle key");
         }
-        String sessionKeyResponse = new GetSessionKeyTask().execute().get();
+        String sessionKeyResponse = new GetSessionKeyTask(singletonPinOnMobileInstance.retrofit).execute().get();
+        // convert json string to pojo
+        Gson gson = new Gson();
+        GenerateSessionKeyResponse generateSessionKeyResponse = gson.fromJson(sessionKeyResponse, GenerateSessionKeyResponse.class);
         if(sessionKeyResponse != null){
-            sessionKey = sessionKeyResponse;
+            keys.setSessionKey(generateSessionKeyResponse.getItem().getKey());
+            keys.setSessionKeyId(generateSessionKeyResponse.getItem().getKeyID());
         }else{
             throw new Exception("failed to get session key");
         }
     }
 
-    public class GetMLETask extends AsyncTask<String, Void, String> {
-        @Override
-        protected String doInBackground(String... strings) {
-            try {
-                GenerateMLEKeyResponse generateMLEKeyResponse = singletonPinOnMobileInstance.retrofit.create(GetMLEKey.class)
-                        .getMLEKey()
-                        .execute()
-                        .body();
-                if (generateMLEKeyResponse == null) return null;
-                String key = generateMLEKeyResponse.getItem().getKey();
-                return key;
-            } catch (IOException e) {
-                e.printStackTrace();
-                return null;
-            }
-        }
+
+
+
+
+    public void sendPin() throws Exception {
+        Log.d("PinOnMobile", "sending otp");
+        String desKey = this.keys.getSessionKey();
+        PinBlock pinBlock = new PinBlock("2092", desKey, account.getAccountNumber());
+        String pinBlockString = pinBlock.genPinBlock();
+        PinSelectPayload pinSelectPayload = new PinSelectPayload(pinBlockString,account.getCardSerialNumber(),"2092");
+        new GeneratePinSelect(singletonPinOnMobileInstance.retrofit, this.keys,institution,pinSelectPayload).execute().get();
     }
-
-    private static class GetSessionKeyTask extends AsyncTask<String,Void,String>{
-        @Override
-        protected String doInBackground(String... strings) {
-            try {
-                GenerateSessionKeyResponse generateSessionKeyResponse = singletonPinOnMobileInstance.retrofit.create(GetSessionKey.class)
-                        .getSessionKey()
-                        .execute()
-                        .body();
-                return generateSessionKeyResponse.getItem().getKey();
-            } catch (IOException e) {
-                e.printStackTrace();
-                return null;
-            }
-        }
-    }
-
-    public void generatePinSelectOtp(GeneratePinSelectOTPPayload generatePinSelectOTPPayload,String mle, String sesKey) throws Exception {
-
-        // create an encrypted payload
-        EncryptedPayload encryptedPayload = new EncryptedPayload();
-        RSAPublicKey rsaPubKey = (RSAPublicKey) getKeyFromString(this.mleKey);
-        encryptedPayload.setEncData(Encryption.encryptString(rsaPubKey
-                ,generatePinSelectOTPPayload.toString(),mle));
-
-        try {
-            Disposable subscribe = retrofit.create(GeneratePinSelectOTP.class)
-                    .generatePinSelectOTP(encryptedPayload,institution.getKeyId())
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(encryptedPayload1 -> {
-                        //1. Decrypt payload
-                        String dec =  Encryption.getDecryptedPayload(encryptedPayload1.getEncData(),institution.getRsaPrivateKey());
-                    }, throwable -> {
-
-                    });
-
-        }catch (Exception e){
-            e.printStackTrace();
-            throw e;
-        }
-    }
-
     public void generateOtp() throws Exception {
-        Log.d("PinOnMobile","sending sms");
+        Log.d("PinOnMobile","generating otp");
         GeneratePinSelectOTPPayload generatePinSelectOTPPayload = new GeneratePinSelectOTPPayload();
         generatePinSelectOTPPayload.setSerno(account.getCardSerialNumber());
 
-        generatePinSelectOtp(generatePinSelectOTPPayload, institution.getRsaPublicKey(),sessionKey);
+        new GeneratePinSelectOtp(singletonPinOnMobileInstance.retrofit, generatePinSelectOTPPayload,institution, keys.getMleKey()).execute().get();
     }
-    public void launchUI() throws Exception {
-        generateOtp();
-        //pass props here
-        Intent intent = new Intent(activity, PinOnMobileActivity.class);
-        intent.putExtra("Institution", singletonPinOnMobileInstance.institution);
-        intent.putExtra("account",singletonPinOnMobileInstance.account);
-        activity.startActivity(intent);
+
+    /**
+     *
+     * @param successCallback
+     * @param failureCallback
+     */
+    public void changePin(final SuccessCallback successCallback, final FailureCallback failureCallback){
+        this.failureCallback = failureCallback;
+        this.successCallback = successCallback;
+        try {
+            generateOtp();
+            sendPin();
+            Intent intent = new Intent(activity, PinOnMobileActivity.class);
+            intent.putExtra("Institution", singletonPinOnMobileInstance.institution);
+            intent.putExtra("Account",singletonPinOnMobileInstance.account);
+            // session key
+            activity.startActivity(intent);
+            activity.finish();
+            this.successCallback.onSuccess("e");
+
+        }catch(Exception e){
+            this.failureCallback.onError(e);
+        }
+    }
+
+    public void newPin(final SuccessCallback successCallback, final FailureCallback failureCallback) {
+        this.failureCallback = failureCallback;
+        this.successCallback = successCallback;
+        try {
+            generateOtp();
+            sendPin();
+            Intent intent = new Intent(activity, PinOnMobileActivity.class);
+            intent.putExtra("Institution", singletonPinOnMobileInstance.institution);
+            intent.putExtra("Account",singletonPinOnMobileInstance.account);
+            this.successCallback.onSuccess("e");
+
+            // session key
+//            activity.startActivity(intent);
+        }catch(Exception e){
+            this.failureCallback.onError(e);
+        }
     }
 
 }

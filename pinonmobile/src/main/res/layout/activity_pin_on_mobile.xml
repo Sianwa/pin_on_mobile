@@ -17,15 +17,16 @@
         app:auto_submit="true"
         android:layout_height="match_parent"
         android:layout_weight="5"
-        android:background="c"
+        android:background="#000000"
         app:pin_indicator_spacing="25dp"
-        app:prompt_text="To confirm you're the owner of this card, please enter your card pin"
+        app:prompt_text="To confirm you're the owner of this card, please enter your card pin again"
         app:prompt_textsize="15sp"
         app:button_numeric_textsize="13sp"
         app:button_alpha_textsize="0sp"
         app:button_drawable_size="24dp"
         app:pin_length="4"
         app:pin_indicator_size="15sp"
+        app:place_digits_randomly="true"
         app:pin_indicator_stroke_width="1dp"/>
 
 </FrameLayout>
