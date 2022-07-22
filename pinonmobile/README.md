@@ -20,7 +20,7 @@ Edit you app manifest file to add the following configuration metadata inside th
 ```xml
  <meta-data
             android:name="interswitch-kenya-limited.pin_on_mobile.base_url"
-            android:value="https://475e-41-215-3-130.ngrok.io/identity/api/v1/"/>
+            android:value="https://testids.interswitch.co.ke/identity/api/v1/"/>
 ```
 Finally ensure data binding is enabled in the root gradle file of your projects by adding the following config in its android section
 
