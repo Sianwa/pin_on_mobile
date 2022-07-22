@@ -20,6 +20,7 @@ import com.interswitchgroup.pinonmobile.models.Institution;
 import com.interswitchgroup.pinonmobile.models.Keys;
 import com.interswitchgroup.pinonmobile.models.PinBlock;
 import com.interswitchgroup.pinonmobile.ui.PinOnMobileActivity;
+import com.interswitchgroup.pinonmobile.utils.TripleDES;
 
 import java.io.Serializable;
 
@@ -42,6 +43,22 @@ public class PinOnMobile implements Serializable {
         this.retrofit = retrofit;
     }
 
+    public SuccessCallback getSuccessCallback() {
+        return successCallback;
+    }
+
+    public void setSuccessCallback(SuccessCallback successCallback) {
+        this.successCallback = successCallback;
+    }
+
+    public FailureCallback getFailureCallback() {
+        return failureCallback;
+    }
+
+    public void setFailureCallback(FailureCallback failureCallback) {
+        this.failureCallback = failureCallback;
+    }
+
     public static PinOnMobile getInstance(Activity activity, Institution institution, Account account) throws Exception {
         if (singletonPinOnMobileInstance == null) {
             singletonPinOnMobileInstance = new PinOnMobile();
@@ -50,20 +67,21 @@ public class PinOnMobile implements Serializable {
             singletonPinOnMobileInstance.account = account;
             DaggerWrapper.getComponent(activity,institution).inject(singletonPinOnMobileInstance);
         }
-        // create a class for keys
-        if (singletonPinOnMobileInstance.keys == null){
-            singletonPinOnMobileInstance.initializeIdentityServiceConfig();
-        }
+        // i have to always get a different session and mle each time we initialize
+        singletonPinOnMobileInstance.initializeIdentityServiceConfig();
         return singletonPinOnMobileInstance;
     }
 
     private void initializeIdentityServiceConfig() throws Exception {
         this.keys  = new Keys();
-        String mleKeyResponse = new GetMLETask(singletonPinOnMobileInstance.retrofit).execute().get();
+        String mleKeyResponse = new GetMLETask(singletonPinOnMobileInstance.retrofit)
+                .execute()
+                .get();
         if(mleKeyResponse != null) {
             keys.setMleKey(mleKeyResponse);
         } else {
-            throw new Exception("failed to get mle key");
+            this.keys = null;
+            throw new Exception("Failed to get mle key");
         }
         String sessionKeyResponse = new GetSessionKeyTask(singletonPinOnMobileInstance.retrofit).execute().get();
         // convert json string to pojo
@@ -73,7 +91,8 @@ public class PinOnMobile implements Serializable {
             keys.setSessionKey(generateSessionKeyResponse.getItem().getKey());
             keys.setSessionKeyId(generateSessionKeyResponse.getItem().getKeyID());
         }else{
-            throw new Exception("failed to get session key");
+            this.keys = null;
+            throw new Exception("Failed to get session key");
         }
     }
 
@@ -81,13 +100,20 @@ public class PinOnMobile implements Serializable {
 
 
 
-    public void sendPin() throws Exception {
-        Log.d("PinOnMobile", "sending otp");
+    public String sendPin(String pin,String otp,SuccessCallback successCallback,FailureCallback failureCallback) throws Exception {
+        Log.d("PinOnMobile", "sending otp and pin block");
         String desKey = this.keys.getSessionKey();
-        PinBlock pinBlock = new PinBlock("2092", desKey, account.getAccountNumber());
-        String pinBlockString = pinBlock.genPinBlock();
-        PinSelectPayload pinSelectPayload = new PinSelectPayload(pinBlockString,account.getCardSerialNumber(),"2092");
-        new GeneratePinSelect(singletonPinOnMobileInstance.retrofit, this.keys,institution,pinSelectPayload).execute().get();
+        TripleDES tripleDES = new TripleDES(desKey,4);
+        String pinBlock = tripleDES.encrypt(account.getAccountNumber(),pin);
+        PinSelectPayload pinSelectPayload = new PinSelectPayload(pinBlock,account.getCardSerialNumber(),otp);
+        String response =  new GeneratePinSelect(singletonPinOnMobileInstance.retrofit, this.keys,institution,pinSelectPayload).execute().get();
+        if(response != null){
+            successCallback.onSuccess(response);
+        }else{
+            failureCallback.onError(new Throwable("unable to set pin"));
+
+        }
+        return response;
     }
     public void generateOtp() throws Exception {
         Log.d("PinOnMobile","generating otp");
@@ -102,38 +128,15 @@ public class PinOnMobile implements Serializable {
      * @param successCallback
      * @param failureCallback
      */
-    public void changePin(final SuccessCallback successCallback, final FailureCallback failureCallback){
+    public void setPin(final SuccessCallback successCallback, final FailureCallback failureCallback){
         this.failureCallback = failureCallback;
         this.successCallback = successCallback;
         try {
-            generateOtp();
-            sendPin();
             Intent intent = new Intent(activity, PinOnMobileActivity.class);
             intent.putExtra("Institution", singletonPinOnMobileInstance.institution);
             intent.putExtra("Account",singletonPinOnMobileInstance.account);
-            // session key
             activity.startActivity(intent);
-            activity.finish();
-            this.successCallback.onSuccess("e");
 
-        }catch(Exception e){
-            this.failureCallback.onError(e);
-        }
-    }
-
-    public void newPin(final SuccessCallback successCallback, final FailureCallback failureCallback) {
-        this.failureCallback = failureCallback;
-        this.successCallback = successCallback;
-        try {
-            generateOtp();
-            sendPin();
-            Intent intent = new Intent(activity, PinOnMobileActivity.class);
-            intent.putExtra("Institution", singletonPinOnMobileInstance.institution);
-            intent.putExtra("Account",singletonPinOnMobileInstance.account);
-            this.successCallback.onSuccess("e");
-
-            // session key
-//            activity.startActivity(intent);
         }catch(Exception e){
             this.failureCallback.onError(e);
         }

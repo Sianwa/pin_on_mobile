@@ -1,20 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".ui.PinOnMobileActivity">
+
+    <data>
+
+        <variable
+            name="paymentVm"
+            type="com.interswitchgroup.pinonmobile.ui.PinOnMobileVM" />
+    </data>
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+<FrameLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/fullscreenBackgroundColor"
     android:theme="@style/ThemeOverlay.PinOnMobile.FullscreenContainer"
-    tools:context=".ui.PinOnMobileActivity">
+    >
 
     <!-- The primary full-screen view. This can be replaced with whatever view
          is needed to present your content, e.g. VideoView, SurfaceView,
          TextureView, etc. -->
+    <!-- Progress bar overlay; shown while network call is in progress -->
+    <FrameLayout
+        android:id="@+id/progress_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:animateLayoutChanges="true"
+        android:background="@color/translucent_gray"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/running_man"
+            android:layout_width="@dimen/mobpay_running_man_height"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:src="@drawable/interswitch_icon"
+            tools:ignore="ContentDescription" />
+
+    </FrameLayout>
     <co.paystack.android.design.widget.PinPadView
         android:id="@+id/pinpadView"
         android:layout_width="match_parent"
-        app:auto_submit="true"
+        app:auto_submit="false"
         android:layout_height="match_parent"
         android:layout_weight="5"
         android:background="#000000"
@@ -30,3 +63,6 @@
         app:pin_indicator_stroke_width="1dp"/>
 
 </FrameLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>

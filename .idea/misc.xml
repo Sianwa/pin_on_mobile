@@ -4,7 +4,12 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.1887031408308004" />
+        <entry key="app/src/main/res/layout/content_main.xml" value="0.10462962962962963" />
+        <entry key="app/src/main/res/layout/fragment_first.xml" value="0.10462962962962963" />
+        <entry key="pinonmobile/src/main/res/layout/activity_custom_progress_bar.xml" value="0.25226449275362317" />
         <entry key="pinonmobile/src/main/res/layout/activity_pin_on_mobile.xml" value="0.21979166666666666" />
+        <entry key="pinonmobile/src/main/res/layout/loading.xml" value="0.25226449275362317" />
+        <entry key="pinonmobile/src/main/res/layout/loading_screen.xml" value="0.22083333333333333" />
       </map>
     </option>
   </component>

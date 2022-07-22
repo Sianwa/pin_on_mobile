@@ -12,8 +12,10 @@ import com.interswitchgroup.pinonmobile.encryption.Encryption;
 import com.interswitchgroup.pinonmobile.models.Institution;
 import com.interswitchgroup.pinonmobile.models.Keys;
 
+import java.io.IOException;
 import java.security.interfaces.RSAPublicKey;
 
+import retrofit2.Response;
 import retrofit2.Retrofit;
 
 public class GeneratePinSelect extends AsyncTask<String,Void,String> {
@@ -33,17 +35,20 @@ public class GeneratePinSelect extends AsyncTask<String,Void,String> {
 
     @Override
     protected String doInBackground(String... strings) {
+        Response<EncryptedPayload> encryptedPayloadResponse;
         try {
             EncryptedPayload encryptedPayload = new EncryptedPayload();
             RSAPublicKey rsaPublicKey = (RSAPublicKey) getKeyFromString(mle);
             encryptedPayload.setEncData(Encryption.encryptString(rsaPublicKey,pinSelectPayload.toString(),mle));
-            EncryptedPayload encryptedResponse = retrofit
+            encryptedPayloadResponse = retrofit
                     .create(GeneratePinSelectOTP.class)
                     .generatePinSelect(encryptedPayload,institution.getKeyId(),sessionKeyId)
-                    .execute()
-                    .body();
-
-            String dec =  Encryption.getDecryptedPayload(encryptedResponse.toString(),institution.getRsaPrivateKey());
+                    .execute();
+            if(encryptedPayloadResponse.errorBody() != null){
+                Log.e("",encryptedPayloadResponse.errorBody().toString() );
+                return null;
+            }
+            String dec =  Encryption.getDecryptedPayload(encryptedPayloadResponse.body().toString(),institution.getRsaPrivateKey());
             Log.d("",dec);
             return  dec;
         }catch (Exception e) {

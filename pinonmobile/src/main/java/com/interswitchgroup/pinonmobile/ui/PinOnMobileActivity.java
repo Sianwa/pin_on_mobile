@@ -4,20 +4,35 @@ import android.annotation.SuppressLint;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.databinding.DataBindingUtil;
+import androidx.databinding.Observable;
+import androidx.databinding.ObservableBoolean;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowInsets;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.interswitchgroup.pinonmobile.PinOnMobile;
 import com.interswitchgroup.pinonmobile.databinding.ActivityPinOnMobileBinding;
 import com.interswitchgroup.pinonmobile.R;
+import com.interswitchgroup.pinonmobile.interfaces.FailureCallback;
+import com.interswitchgroup.pinonmobile.interfaces.SuccessCallback;
 import com.interswitchgroup.pinonmobile.models.Account;
 import com.interswitchgroup.pinonmobile.models.Institution;
+import com.interswitchgroup.pinonmobile.utils.AndroidUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,69 +45,106 @@ import co.paystack.android.design.widget.PinPadView;
  */
 public class PinOnMobileActivity extends AppCompatActivity {
     private ActivityPinOnMobileBinding binding;
+    private final String LOG_TAG = this.getClass().getSimpleName();
     List<String> pages = new ArrayList<>();
+    private ObservableBoolean loading = new ObservableBoolean(false);
     PinOnMobile pinOnMobile;
     Institution institution;
     Account account;
-    String otp = "";
-    String newPin = "";
+    private String otp = "";
+    private String newPin = "";
     String confirmNewPin = "";
     Integer currentPage = 0;
+
+    public ObservableBoolean getLoading() {
+        return loading;
+    }
+
+    public void setLoading(ObservableBoolean loading) {
+        this.loading = loading;
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        binding = ActivityPinOnMobileBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
-        Bundle extras = getIntent().getExtras();
         pages.add("Please enter your otp");
-        pages.add("please enter your pin");
+        pages.add("Please enter your pin");
         pages.add("Please confirm your pin");
-        if (extras != null) {
-            this.institution = (Institution) extras.getSerializable("Institution");
-            this.account = (Account) extras.getSerializable("Account");
-            //The key argument here must match that used in the other activity
-        }
+        binding = ActivityPinOnMobileBinding.inflate(getLayoutInflater());
+        binding.pinpadView.setPromptText(pages.get(currentPage));
+        setContentView(binding.getRoot());
+
+
+        Bundle extras = getIntent().getExtras();
         try {
+//            pinOnMobile.setSuccessCallback(response -> {
+//                PinOnMobileActivity.this.finish();
+//                pinOnMobile.getSuccessCallback().onSuccess(response);
+//            });
+//            pinOnMobile.setFailureCallback(error -> {
+//                PinOnMobileActivity.this.finish();
+//                pinOnMobile.getSuccessCallback().onSuccess(error);
+//            });
+            if (extras != null) {
+                this.institution = (Institution) extras.getSerializable("Institution");
+                this.account = (Account) extras.getSerializable("Account");
+                //The key argument here must match that used in the other activity
+            }
             this.pinOnMobile = PinOnMobile.getInstance(this, this.institution, this.account);
+            this.pinOnMobile.generateOtp();
         } catch (Exception e) {
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
-            finish();
+            pinOnMobile.getFailureCallback().onError(e);
+            PinOnMobileActivity.this.finish();
         }
-        // loading dialogue + progrees bar
-        // enum of steps
-        // change pin
-        // 1. give me your otp , set new pin , confirm new pin
-        // hii ni ya first pin
+
+
+        // loading dialogue + progress bar
         binding.pinpadView.setOnSubmitListener(new PinPadView.OnSubmitListener() {
             @Override
             public void onCompleted(String pin) {
                 // listen for when the "done" button is clicked
-                // and the pin is complete
-                if (currentPage == 0){
-                    otp = pin;
-                }
+                if (currentPage == 0){setOtp(pin);}
                 if (currentPage == 1){
-                    newPin = pin;
+                    setNewPin(pin);
                 }
                 if (currentPage == 2){
-                    confirmNewPin = pin;
+                    setConfirmNewPin(pin);
+                    setPin();
                 }
-                currentPage++;
+                if(currentPage < 2){
+                    currentPage++;
+                }
                 binding.pinpadView.clear();
                 binding.pinpadView.setPromptText(pages.get(currentPage));
             }
             // block back button
             @Override
             public void onIncompleteSubmit(String pin) {
-                // listen for when the "done" button is clicked
-                // and the pin is incomplete
-                System.out.println("incomplete otp");
+                Log.i(LOG_TAG, "incomplete otp");
             }
             });
 
 
 
+    }
+
+    private void setPin() {
+        try {
+            Log.d(LOG_TAG, "setting pin");
+            if(getNewPin().equalsIgnoreCase(getConfirmNewPin())){
+                pinOnMobile.sendPin(getNewPin(),getOtp(),pinOnMobile.getSuccessCallback(), pinOnMobile.getFailureCallback());
+                PinOnMobileActivity.this.finish();
+            }else {
+                currentPage = 0;
+                Snackbar.make(binding.pinpadView, "The two pins are not the same", Snackbar.LENGTH_LONG)
+                        .show();
+            }
+
+        } catch (Exception e) {
+            Log.d(LOG_TAG, e.getMessage());
+            pinOnMobile.getFailureCallback().onError(e);
+            PinOnMobileActivity.this.finish();
+        }
     }
 
     @Override
@@ -102,11 +154,45 @@ public class PinOnMobileActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        // check current page
-        // if page == 0
+        if(currentPage == 0){
+            pinOnMobile.getFailureCallback().onError(new Exception("User exited before finishing"));
+            PinOnMobileActivity.this.finish();
+        }else {
+            currentPage--;
+            binding.pinpadView.clear();
+            binding.pinpadView.setPromptText(pages.get(currentPage));
+        }
     }
 
+    public String getOtp() {
+        return otp;
+    }
 
+    public void setOtp(String otp) {
+        this.otp = otp;
+    }
 
+    public String getNewPin() {
+        return newPin;
+    }
 
+    public void setNewPin(String newPin) {
+        this.newPin = newPin;
+    }
+
+    public String getConfirmNewPin() {
+        return confirmNewPin;
+    }
+
+    public void setConfirmNewPin(String confirmNewPin) {
+        this.confirmNewPin = confirmNewPin;
+    }
+
+    public Integer getCurrentPage() {
+        return currentPage;
+    }
+
+    public void setCurrentPage(Integer currentPage) {
+        this.currentPage = currentPage;
+    }
 }

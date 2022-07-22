@@ -24,7 +24,7 @@
         </activity>
         <meta-data
             android:name="interswitch-kenya-limited.pin_on_mobile.base_url"
-            android:value="http://192.168.100.2:8001/identity/api/v1/"/>
+            android:value="https://testids.interswitch.co.ke/identity/api/v1/"/>
     </application>
 
 </manifest>
