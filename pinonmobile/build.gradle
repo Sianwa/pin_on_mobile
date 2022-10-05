@@ -91,4 +91,7 @@ dependencies {
     implementation 'co.paystack.android.design.widget:pinpad:1.0.8'
 
 
+    //loading animation
+    def lottieVersion = '5.2.0'
+    implementation "com.airbnb.android:lottie:$lottieVersion"
 }

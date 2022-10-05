@@ -16,9 +16,11 @@ import com.interswitchgroup.pinonmobile.di.DaggerWrapper;
 import com.interswitchgroup.pinonmobile.interfaces.FailureCallback;
 import com.interswitchgroup.pinonmobile.interfaces.SuccessCallback;
 import com.interswitchgroup.pinonmobile.models.Account;
+import com.interswitchgroup.pinonmobile.models.GenericResponse;
 import com.interswitchgroup.pinonmobile.models.Institution;
 import com.interswitchgroup.pinonmobile.models.Keys;
-import com.interswitchgroup.pinonmobile.models.PinBlock;
+import com.interswitchgroup.pinonmobile.models.SuccessModel;
+import com.interswitchgroup.pinonmobile.ui.LoadingScreenActivity;
 import com.interswitchgroup.pinonmobile.ui.PinOnMobileActivity;
 import com.interswitchgroup.pinonmobile.utils.TripleDES;
 
@@ -96,25 +98,24 @@ public class PinOnMobile implements Serializable {
         }
     }
 
-
-
-
-
-    public String sendPin(String pin, String otp, SuccessCallback successCallback, FailureCallback failureCallback) throws Exception {
+    public SuccessModel sendPin(String pin, String otp, SuccessCallback successCallback, FailureCallback failureCallback) throws Exception {
         Log.d("PinOnMobile", "sending otp and pin block");
         String desKey = this.keys.getSessionKey();
         TripleDES tripleDES = new TripleDES(desKey,4);
         String pinBlock = tripleDES.encrypt(account.getAccountNumber(),pin);
         PinSelectPayload pinSelectPayload = new PinSelectPayload(pinBlock,account.getCardSerialNumber(),otp);
         String response =  new GeneratePinSelect(singletonPinOnMobileInstance.retrofit, this.keys,institution,pinSelectPayload).execute().get();
-        if(response != null){
-            successCallback.onSuccess(response);
+        Gson gson = new Gson();
+        SuccessModel successModel = gson.fromJson(response, SuccessModel.class);
+        if(successModel.code != "0"){
+            failureCallback.onError(new GenericResponse(successModel.code,successModel.message));
         }else{
-            failureCallback.onError(new Throwable("unable to set pin"));
-
+            successCallback.onSuccess(successModel);
         }
-        return response;
+        return successModel;
+
     }
+
     public void generateOtp() throws Exception {
         Log.d("PinOnMobile","generating otp");
         GeneratePinSelectOTPPayload generatePinSelectOTPPayload = new GeneratePinSelectOTPPayload();
@@ -138,7 +139,18 @@ public class PinOnMobile implements Serializable {
             activity.startActivity(intent);
 
         }catch(Exception e){
-            this.failureCallback.onError(e);
+            this.failureCallback.onError(new GenericResponse("", e.getMessage()));
+        }
+    }
+
+    public void launchService(Activity activity, Institution institution, Account account){
+        try{
+            Intent intent = new Intent(activity, LoadingScreenActivity.class);
+            intent.putExtra("Institution", singletonPinOnMobileInstance.institution);
+            intent.putExtra("Account",singletonPinOnMobileInstance.account);
+            activity.startActivity(intent);
+        }catch(Exception e){
+            this.failureCallback.onError(new GenericResponse("",e.getMessage()));
         }
     }
 

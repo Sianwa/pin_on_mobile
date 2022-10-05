@@ -31,7 +31,9 @@ import com.interswitchgroup.pinonmobile.R;
 import com.interswitchgroup.pinonmobile.interfaces.FailureCallback;
 import com.interswitchgroup.pinonmobile.interfaces.SuccessCallback;
 import com.interswitchgroup.pinonmobile.models.Account;
+import com.interswitchgroup.pinonmobile.models.GenericResponse;
 import com.interswitchgroup.pinonmobile.models.Institution;
+import com.interswitchgroup.pinonmobile.models.SuccessModel;
 import com.interswitchgroup.pinonmobile.utils.AndroidUtils;
 
 import java.util.ArrayList;
@@ -55,6 +57,7 @@ public class PinOnMobileActivity extends AppCompatActivity {
     private String newPin = "";
     String confirmNewPin = "";
     Integer currentPage = 0;
+    LoadingFragment loadingFragment;
 
     public ObservableBoolean getLoading() {
         return loading;
@@ -93,7 +96,7 @@ public class PinOnMobileActivity extends AppCompatActivity {
             this.pinOnMobile.generateOtp();
         } catch (Exception e) {
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
-            pinOnMobile.getFailureCallback().onError(e);
+            pinOnMobile.getFailureCallback().onError(new GenericResponse("", e.getMessage()));
             PinOnMobileActivity.this.finish();
         }
 
@@ -132,8 +135,13 @@ public class PinOnMobileActivity extends AppCompatActivity {
         try {
             Log.d(LOG_TAG, "setting pin");
             if(getNewPin().equalsIgnoreCase(getConfirmNewPin())){
-                pinOnMobile.sendPin(getNewPin(),getOtp(),pinOnMobile.getSuccessCallback(), pinOnMobile.getFailureCallback());
-                PinOnMobileActivity.this.finish();
+                showLoadingDialog();
+                SuccessModel respModel = pinOnMobile.sendPin(getNewPin(),getOtp(),pinOnMobile.getSuccessCallback(), pinOnMobile.getFailureCallback());
+                if(respModel != null){
+                    dismissLoadingDialog();
+                }
+          PinOnMobileActivity.this.finish();
+
             }else {
                 currentPage = 0;
                 Snackbar.make(binding.pinpadView, "The two pins are not the same", Snackbar.LENGTH_LONG)
@@ -142,7 +150,7 @@ public class PinOnMobileActivity extends AppCompatActivity {
 
         } catch (Exception e) {
             Log.d(LOG_TAG, e.getMessage());
-            pinOnMobile.getFailureCallback().onError(e);
+            pinOnMobile.getFailureCallback().onError(new GenericResponse("",e.getMessage()));
             PinOnMobileActivity.this.finish();
         }
     }
@@ -155,7 +163,7 @@ public class PinOnMobileActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         if(currentPage == 0){
-            pinOnMobile.getFailureCallback().onError(new Exception("User exited before finishing"));
+            pinOnMobile.getFailureCallback().onError(new GenericResponse("","User exited before finishing"));
             PinOnMobileActivity.this.finish();
         }else {
             currentPage--;
@@ -163,6 +171,28 @@ public class PinOnMobileActivity extends AppCompatActivity {
             binding.pinpadView.setPromptText(pages.get(currentPage));
         }
     }
+
+    //show loading dialog
+    public void showLoadingDialog() {
+        loadingFragment = new LoadingFragment();
+        FragmentManager fragmentManager = this.getSupportFragmentManager();
+        FragmentTransaction transaction = fragmentManager.beginTransaction();
+        // For a little polish, specify a transition animation
+        transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+        // To make it fullscreen, use the 'content' root view as the container
+        // for the fragment, which is always the root view for the activity
+        if(!loadingFragment.isAdded()) {
+            transaction.add(android.R.id.content, loadingFragment)
+                    .addToBackStack(null).commit();
+        }
+    }
+
+    public void dismissLoadingDialog() {
+        if (loadingFragment != null) {
+            loadingFragment.dismissAllowingStateLoss();
+        }
+    }
+
 
     public String getOtp() {
         return otp;

@@ -1,5 +1,7 @@
 package com.interswitchgroup.pinonmobile.interfaces;
 
-public interface SuccessCallback<String> {
-    void onSuccess(String successResponse);
+import com.interswitchgroup.pinonmobile.models.SuccessModel;
+
+public interface SuccessCallback<T extends SuccessModel> {
+    void onSuccess(T successResponse);
 }
