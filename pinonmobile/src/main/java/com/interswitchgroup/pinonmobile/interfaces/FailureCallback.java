@@ -1,5 +1,7 @@
 package com.interswitchgroup.pinonmobile.interfaces;
 
+import com.interswitchgroup.pinonmobile.models.GenericResponse;
+
 public interface FailureCallback {
-    void onError(Throwable error);
+    void onError(GenericResponse error);
 }

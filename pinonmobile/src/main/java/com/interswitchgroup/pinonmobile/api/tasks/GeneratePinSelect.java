@@ -46,7 +46,7 @@ public class GeneratePinSelect extends AsyncTask<String,Void,String> {
                     .execute();
             if(encryptedPayloadResponse.errorBody() != null){
                 Log.e("",encryptedPayloadResponse.errorBody().toString() );
-                return null;
+                return encryptedPayloadResponse.errorBody().string();
             }
             String dec =  Encryption.getDecryptedPayload(encryptedPayloadResponse.body().toString(),institution.getRsaPrivateKey());
             Log.d("",dec);
