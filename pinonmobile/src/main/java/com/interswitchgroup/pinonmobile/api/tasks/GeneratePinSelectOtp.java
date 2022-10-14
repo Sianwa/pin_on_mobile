@@ -42,7 +42,7 @@ public class GeneratePinSelectOtp extends AsyncTask<String,Void,String> {
                     .body();
 
             String dec = Encryption.getDecryptedPayload(encryptedResponse.getEncData(), institution.getRsaPrivateKey());
-            Log.d("", dec);
+            Log.d("OTP ENC DATA:", dec);
             return  dec;
         } catch (Exception e) {
             e.printStackTrace();

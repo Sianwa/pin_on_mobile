@@ -21,7 +21,7 @@ public class GenerateSessionKeyResponse {
     @Generated("jsonschema2pojo")
     public class Item {
 
-        @SerializedName("entity")
+        @SerializedName("key")
         @Expose
         private String key;
         @SerializedName("checkSum")
