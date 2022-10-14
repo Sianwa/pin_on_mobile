@@ -1,40 +1,21 @@
 package com.interswitchgroup.pinonmobile.ui;
 
-import android.annotation.SuppressLint;
-
-import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.databinding.DataBindingUtil;
-import androidx.databinding.Observable;
 import androidx.databinding.ObservableBoolean;
-import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
-import android.app.ProgressDialog;
-import android.content.Context;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.WindowInsets;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.interswitchgroup.pinonmobile.PinOnMobile;
 import com.interswitchgroup.pinonmobile.databinding.ActivityPinOnMobileBinding;
-import com.interswitchgroup.pinonmobile.R;
-import com.interswitchgroup.pinonmobile.interfaces.FailureCallback;
-import com.interswitchgroup.pinonmobile.interfaces.SuccessCallback;
 import com.interswitchgroup.pinonmobile.models.Account;
 import com.interswitchgroup.pinonmobile.models.GenericResponse;
 import com.interswitchgroup.pinonmobile.models.Institution;
-import com.interswitchgroup.pinonmobile.models.SuccessModel;
-import com.interswitchgroup.pinonmobile.utils.AndroidUtils;
+import com.interswitchgroup.pinonmobile.models.ResponsePayloadModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -133,10 +114,10 @@ public class PinOnMobileActivity extends AppCompatActivity {
 
     private void setPin() {
         try {
-            Log.d(LOG_TAG, "setting pin");
+            Log.d(LOG_TAG, "SETTING PIN....");
             if(getNewPin().equalsIgnoreCase(getConfirmNewPin())){
                 showLoadingDialog();
-                SuccessModel respModel = pinOnMobile.sendPin(getNewPin(),getOtp(),pinOnMobile.getSuccessCallback(), pinOnMobile.getFailureCallback());
+                ResponsePayloadModel respModel = pinOnMobile.sendPin(getNewPin(),getOtp(),pinOnMobile.getSuccessCallback(), pinOnMobile.getFailureCallback());
                 if(respModel != null){
                     dismissLoadingDialog();
                 }
@@ -150,6 +131,7 @@ public class PinOnMobileActivity extends AppCompatActivity {
 
         } catch (Exception e) {
             Log.d(LOG_TAG, e.getMessage());
+            e.printStackTrace();
             pinOnMobile.getFailureCallback().onError(new GenericResponse("",e.getMessage()));
             PinOnMobileActivity.this.finish();
         }

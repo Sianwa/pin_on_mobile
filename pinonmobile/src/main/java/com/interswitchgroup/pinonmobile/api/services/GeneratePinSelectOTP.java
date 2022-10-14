@@ -2,7 +2,6 @@ package com.interswitchgroup.pinonmobile.api.services;
 
 import com.interswitchgroup.pinonmobile.api.models.EncryptedPayload;
 
-import io.reactivex.Single;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.Header;
@@ -15,5 +14,5 @@ public interface GeneratePinSelectOTP {
 
     @POST("cards/pin/select")
     Call<EncryptedPayload> generatePinSelect(@Body EncryptedPayload encryptedPayload
-    , @Header("keyId") String keyId ,@Header("sessionKeyId") String sessionKeyId);
+    , @Header("keyId") String keyId , @Header("sessionKeyId") String sessionKeyId);
 }

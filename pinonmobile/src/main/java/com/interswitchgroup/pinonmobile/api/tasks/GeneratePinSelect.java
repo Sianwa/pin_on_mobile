@@ -5,14 +5,15 @@ import static com.interswitchgroup.pinonmobile.encryption.Encryption.getKeyFromS
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.google.gson.Gson;
 import com.interswitchgroup.pinonmobile.api.models.EncryptedPayload;
+import com.interswitchgroup.pinonmobile.api.models.GenerateSessionKeyResponse;
 import com.interswitchgroup.pinonmobile.api.models.PinSelectPayload;
 import com.interswitchgroup.pinonmobile.api.services.GeneratePinSelectOTP;
 import com.interswitchgroup.pinonmobile.encryption.Encryption;
 import com.interswitchgroup.pinonmobile.models.Institution;
 import com.interswitchgroup.pinonmobile.models.Keys;
 
-import java.io.IOException;
 import java.security.interfaces.RSAPublicKey;
 
 import retrofit2.Response;
@@ -35,22 +36,23 @@ public class GeneratePinSelect extends AsyncTask<String,Void,String> {
 
     @Override
     protected String doInBackground(String... strings) {
-        Response<EncryptedPayload> encryptedPayloadResponse;
         try {
             EncryptedPayload encryptedPayload = new EncryptedPayload();
             RSAPublicKey rsaPublicKey = (RSAPublicKey) getKeyFromString(mle);
             encryptedPayload.setEncData(Encryption.encryptString(rsaPublicKey,pinSelectPayload.toString(),mle));
-            encryptedPayloadResponse = retrofit
+            Response<EncryptedPayload> payloadResponse = retrofit
                     .create(GeneratePinSelectOTP.class)
                     .generatePinSelect(encryptedPayload,institution.getKeyId(),sessionKeyId)
                     .execute();
-            if(encryptedPayloadResponse.errorBody() != null){
-                Log.e("",encryptedPayloadResponse.errorBody().toString() );
-                return encryptedPayloadResponse.errorBody().string();
+            if(payloadResponse.errorBody() != null){
+                Gson gson = new Gson();
+                EncryptedPayload failureResp = gson.fromJson(payloadResponse.errorBody().string(), EncryptedPayload.class);
+                Log.d("ERROR RESPONSE::", payloadResponse.errorBody().string());
+                return Encryption.getDecryptedPayload(failureResp.getEncData(), institution.getRsaPrivateKey());
             }
-            String dec =  Encryption.getDecryptedPayload(encryptedPayloadResponse.body().toString(),institution.getRsaPrivateKey());
-            Log.d("",dec);
-            return  dec;
+            String dec = Encryption.getDecryptedPayload(payloadResponse.body().getEncData(), institution.getRsaPrivateKey());
+            Log.d("RESPONSE:: ", payloadResponse.body().getEncData());
+            return dec;
         }catch (Exception e) {
             e.printStackTrace();
             return null;
