@@ -122,7 +122,15 @@ public class PinOnMobile implements Serializable {
         GeneratePinSelectOTPPayload generatePinSelectOTPPayload = new GeneratePinSelectOTPPayload();
         generatePinSelectOTPPayload.setSerno(account.getCardSerialNumber());
 
-        new GeneratePinSelectOtp(singletonPinOnMobileInstance.retrofit, generatePinSelectOTPPayload,institution, keys.getMleKey()).execute().get();
+        String response = new GeneratePinSelectOtp(singletonPinOnMobileInstance.retrofit, generatePinSelectOTPPayload,institution, keys.getMleKey()).execute().get();
+        Gson gson = new Gson();
+        ResponsePayloadModel successModel = gson.fromJson(response, ResponsePayloadModel.class);
+        System.out.println("RESPONSE DATA::"+successModel.toString());
+        if(!successModel.code.equals("0")){
+            //failureCallback.onError(new GenericResponse(successModel.code,successModel.message));
+            throw new Exception(successModel.getMessage());
+        }
+
     }
 
     /**

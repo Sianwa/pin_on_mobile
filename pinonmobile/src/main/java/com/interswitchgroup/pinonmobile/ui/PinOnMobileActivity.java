@@ -108,15 +108,15 @@ public class PinOnMobileActivity extends AppCompatActivity {
             }
             });
 
-
-
     }
 
+
     private void setPin() {
+        showLoadingDialog();
         try {
             Log.d(LOG_TAG, "SETTING PIN....");
             if(getNewPin().equalsIgnoreCase(getConfirmNewPin())){
-                showLoadingDialog();
+
                 ResponsePayloadModel respModel = pinOnMobile.sendPin(getNewPin(),getOtp(),pinOnMobile.getSuccessCallback(), pinOnMobile.getFailureCallback());
                 if(respModel != null){
                     dismissLoadingDialog();
@@ -156,6 +156,7 @@ public class PinOnMobileActivity extends AppCompatActivity {
 
     //show loading dialog
     public void showLoadingDialog() {
+        System.out.println("LOADING...........");
         loadingFragment = new LoadingFragment();
         FragmentManager fragmentManager = this.getSupportFragmentManager();
         FragmentTransaction transaction = fragmentManager.beginTransaction();
