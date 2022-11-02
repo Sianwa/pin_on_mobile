@@ -103,7 +103,7 @@ public class PinOnMobile implements Serializable {
         String desKey = this.keys.getSessionKey();
         TripleDES tripleDES = new TripleDES(desKey,4);
         String pinBlock = tripleDES.encrypt(account.getAccountNumber(),pin);
-        PinSelectPayload pinSelectPayload = new PinSelectPayload(pinBlock,account.getCardSerialNumber(),otp, account.getAccountNumber());
+        PinSelectPayload pinSelectPayload = new PinSelectPayload(pinBlock, account.getCardSerialNumber(), otp, account.getAccountNumber(), institution.getInstitutionId(), keys.getMleKey(), account.getExpiryDate());
         String response =  new GeneratePinSelect(singletonPinOnMobileInstance.retrofit, this.keys,institution,pinSelectPayload).execute().get();
         Gson gson = new Gson();
         ResponsePayloadModel successModel = gson.fromJson(response, ResponsePayloadModel.class);
@@ -121,6 +121,11 @@ public class PinOnMobile implements Serializable {
         Log.d("PinOnMobile","GENERATING OTP....");
         GeneratePinSelectOTPPayload generatePinSelectOTPPayload = new GeneratePinSelectOTPPayload();
         generatePinSelectOTPPayload.setSerno(account.getCardSerialNumber());
+        generatePinSelectOTPPayload.setPan(account.getAccountNumber());
+        generatePinSelectOTPPayload.setExpiryDate(account.getExpiryDate());
+
+        System.out.println("PAYLOAD::"+generatePinSelectOTPPayload.toString());
+
 
         String response = new GeneratePinSelectOtp(singletonPinOnMobileInstance.retrofit, generatePinSelectOTPPayload,institution, keys.getMleKey()).execute().get();
         Gson gson = new Gson();
