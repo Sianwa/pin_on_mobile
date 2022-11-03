@@ -6,10 +6,18 @@ public class Account implements Serializable {
 
     private String accountNumber;
     private String cardSerialNumber;
+    private String expiryDate;
+
 
     public Account(String accountNumber, String cardSerialNumber) {
         this.accountNumber = accountNumber;
         this.cardSerialNumber = cardSerialNumber;
+    }
+
+    public Account(String accountNumber, String cardSerialNumber, String expiryDate) {
+        this.accountNumber = accountNumber;
+        this.cardSerialNumber = cardSerialNumber;
+        this.expiryDate = expiryDate;
     }
 
     public String getAccountNumber() {
@@ -26,5 +34,13 @@ public class Account implements Serializable {
 
     public void setCardSerialNumber(String cardSerialNumber) {
         this.cardSerialNumber = cardSerialNumber;
+    }
+
+    public String getExpiryDate() {
+        return expiryDate;
+    }
+
+    public void setExpiryDate(String expiryDate) {
+        this.expiryDate = expiryDate;
     }
 }

@@ -22,8 +22,7 @@ public class DaggerWrapper {
 
         mComponent = DaggerMainComponent
                 .builder()
-                .netModule(new NetModule(baseUrl,
-                        institution.getClientId(), institution.getClientSecret(),institution.getInstitutionId() ))
+                .netModule(new NetModule(baseUrl, institution.getClientId(), institution.getClientSecret(),institution.getInstitutionId() ))
                 .build();
     }
 }
