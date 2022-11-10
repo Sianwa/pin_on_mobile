@@ -44,6 +44,8 @@ public class MainActivity extends AppCompatActivity {
                         rsaPubKeyString,rsaPrivateKeyString,"deee79ba-f912-11eb-9a03-0242ac130003");
 
                 Account account = new Account("4167040082556173","1410916", "2506");
+               //debit: Account account = new Account("4726390060000056","1410916", "");
+
                 PinOnMobile pinOnMobile = PinOnMobile.getInstance(MainActivity.this,institution,account);
                 pinOnMobile.setPin(
                         response -> Snackbar
