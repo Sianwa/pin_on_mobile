@@ -120,11 +120,21 @@ public class PinOnMobile implements Serializable {
     public void generateOtp() throws Exception {
         Log.d("PinOnMobile","GENERATING OTP....");
         GeneratePinSelectOTPPayload generatePinSelectOTPPayload = new GeneratePinSelectOTPPayload();
-        generatePinSelectOTPPayload.setSerno(account.getCardSerialNumber());
-        generatePinSelectOTPPayload.setPan(account.getAccountNumber());
-        generatePinSelectOTPPayload.setExpiryDate(account.getExpiryDate());
 
-        System.out.println("PAYLOAD::"+generatePinSelectOTPPayload.toString());
+        if(account.getExpiryDate().equals("")){
+            //if expiry is absent treat it like a debit
+            generatePinSelectOTPPayload.setSerno(account.getCardSerialNumber());
+            generatePinSelectOTPPayload.setPan("");
+            generatePinSelectOTPPayload.setExpiryDate("");
+        }else{
+            //if expiry is absent treat it like a credit
+            generatePinSelectOTPPayload.setSerno(account.getCardSerialNumber());
+            generatePinSelectOTPPayload.setPan(account.getAccountNumber());
+            generatePinSelectOTPPayload.setExpiryDate(account.getExpiryDate());
+
+        }
+
+        System.out.println("PAYLOAD::"+ generatePinSelectOTPPayload);
 
 
         String response = new GeneratePinSelectOtp(singletonPinOnMobileInstance.retrofit, generatePinSelectOTPPayload,institution, keys.getMleKey()).execute().get();
