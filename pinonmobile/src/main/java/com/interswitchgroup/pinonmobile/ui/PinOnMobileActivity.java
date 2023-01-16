@@ -112,14 +112,14 @@ public class PinOnMobileActivity extends AppCompatActivity {
 
 
     private void setPin() {
-        showLoadingDialog();
+        runOnUiThread(this::showLoadingDialog);
         try {
             Log.d(LOG_TAG, "SETTING PIN....");
             if(getNewPin().equalsIgnoreCase(getConfirmNewPin())){
 
                 ResponsePayloadModel respModel = pinOnMobile.sendPin(getNewPin(),getOtp(),pinOnMobile.getSuccessCallback(), pinOnMobile.getFailureCallback());
                 if(respModel != null){
-                    dismissLoadingDialog();
+                    runOnUiThread(this::dismissLoadingDialog);
                 }
           PinOnMobileActivity.this.finish();
 
