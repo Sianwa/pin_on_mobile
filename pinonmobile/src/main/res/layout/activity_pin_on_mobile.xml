@@ -1,68 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".ui.PinOnMobileActivity">
-
-    <data>
-
-        <variable
-            name="paymentVm"
-            type="com.interswitchgroup.pinonmobile.ui.PinOnMobileVM" />
-    </data>
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-<FrameLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/fullscreenBackgroundColor"
-    android:theme="@style/ThemeOverlay.PinOnMobile.FullscreenContainer"
-    >
+    tools:context=".ui.PinOnMobileActivity">
 
-    <!-- The primary full-screen view. This can be replaced with whatever view
-         is needed to present your content, e.g. VideoView, SurfaceView,
-         TextureView, etc. -->
-    <!-- Progress bar overlay; shown while network call is in progress -->
     <FrameLayout
-        android:id="@+id/progress_overlay"
+        android:id="@+id/frameLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:animateLayoutChanges="true"
-        android:background="@color/translucent_gray"
-        android:clickable="true"
-        android:focusable="true"
-        android:visibility="gone">
+        android:background="?attr/fullscreenBackgroundColor"
+        android:theme="@style/ThemeOverlay.PinOnMobile.FullscreenContainer">
 
-        <ImageView
-            android:id="@+id/running_man"
-            android:layout_width="@dimen/mobpay_running_man_height"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:src="@drawable/interswitch_icon"
-            tools:ignore="ContentDescription" />
+        <!-- The primary full-screen view. This can be replaced with whatever view
+             is needed to present your content, e.g. VideoView, SurfaceView,
+             TextureView, etc. -->
+        <!-- Progress bar overlay; shown while network call is in progress -->
+
+
+        <co.paystack.android.design.widget.PinPadView
+            android:id="@+id/pinpadView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="5"
+            android:background="#000000"
+            app:auto_submit="false"
+            app:button_alpha_textsize="0sp"
+            app:button_drawable_size="24dp"
+            app:button_numeric_textsize="13sp"
+            app:pin_indicator_size="15sp"
+            app:pin_indicator_spacing="25dp"
+            app:pin_indicator_stroke_width="1dp"
+            app:pin_length="4"
+            app:place_digits_randomly="true"
+            app:prompt_text="To confirm you're the owner of this card, please enter your card pin again"
+            app:prompt_textsize="15sp" />
+
+        <FrameLayout
+            android:id="@+id/progress_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:animateLayoutChanges="true"
+            android:background="@color/translucent_gray"
+            android:clickable="true"
+            android:focusable="true"
+            android:visibility="invisible">
+
+            <ImageView
+                android:id="@+id/running_man"
+                android:layout_width="@dimen/mobpay_running_man_height"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:src="@drawable/interswitch_icon"
+                tools:ignore="ContentDescription" />
+        </FrameLayout>
 
     </FrameLayout>
-    <co.paystack.android.design.widget.PinPadView
-        android:id="@+id/pinpadView"
-        android:layout_width="match_parent"
-        app:auto_submit="false"
-        android:layout_height="match_parent"
-        android:layout_weight="5"
-        android:background="#000000"
-        app:pin_indicator_spacing="25dp"
-        app:prompt_text="To confirm you're the owner of this card, please enter your card pin again"
-        app:prompt_textsize="15sp"
-        app:button_numeric_textsize="13sp"
-        app:button_alpha_textsize="0sp"
-        app:button_drawable_size="24dp"
-        app:pin_length="4"
-        app:pin_indicator_size="15sp"
-        app:place_digits_randomly="true"
-        app:pin_indicator_stroke_width="1dp"/>
+</androidx.constraintlayout.widget.ConstraintLayout>
 
-</FrameLayout>
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-</layout>

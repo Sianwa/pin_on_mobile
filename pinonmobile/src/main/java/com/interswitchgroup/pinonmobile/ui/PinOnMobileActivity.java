@@ -7,10 +7,14 @@ import androidx.fragment.app.FragmentTransaction;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.interswitchgroup.pinonmobile.PinOnMobile;
+import com.interswitchgroup.pinonmobile.R;
 import com.interswitchgroup.pinonmobile.databinding.ActivityPinOnMobileBinding;
 import com.interswitchgroup.pinonmobile.models.Account;
 import com.interswitchgroup.pinonmobile.models.GenericResponse;
@@ -39,6 +43,7 @@ public class PinOnMobileActivity extends AppCompatActivity {
     String confirmNewPin = "";
     Integer currentPage = 0;
     LoadingFragment loadingFragment;
+    FrameLayout progressBar;
 
     public ObservableBoolean getLoading() {
         return loading;
@@ -47,6 +52,7 @@ public class PinOnMobileActivity extends AppCompatActivity {
     public void setLoading(ObservableBoolean loading) {
         this.loading = loading;
     }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -56,6 +62,7 @@ public class PinOnMobileActivity extends AppCompatActivity {
         binding = ActivityPinOnMobileBinding.inflate(getLayoutInflater());
         binding.pinpadView.setPromptText(pages.get(currentPage));
         setContentView(binding.getRoot());
+        progressBar = findViewById(R.id.progress_overlay);
 
 
         Bundle extras = getIntent().getExtras();
@@ -87,43 +94,47 @@ public class PinOnMobileActivity extends AppCompatActivity {
             @Override
             public void onCompleted(String pin) {
                 // listen for when the "done" button is clicked
-                if (currentPage == 0){setOtp(pin);}
-                if (currentPage == 1){
+                if (currentPage == 0) {
+                    setOtp(pin);
+                }
+                if (currentPage == 1) {
                     setNewPin(pin);
                 }
-                if (currentPage == 2){
+                if (currentPage == 2) {
                     setConfirmNewPin(pin);
                     setPin();
                 }
-                if(currentPage < 2){
+                if (currentPage < 2) {
                     currentPage++;
                 }
                 binding.pinpadView.clear();
                 binding.pinpadView.setPromptText(pages.get(currentPage));
             }
+
             // block back button
             @Override
             public void onIncompleteSubmit(String pin) {
                 Log.i(LOG_TAG, "incomplete otp");
             }
-            });
+        });
 
     }
 
 
     private void setPin() {
-        runOnUiThread(this::showLoadingDialog);
         try {
             Log.d(LOG_TAG, "SETTING PIN....");
-            if(getNewPin().equalsIgnoreCase(getConfirmNewPin())){
+            runOnUiThread(() ->  binding.progressOverlay.setVisibility(View.VISIBLE));
 
-                ResponsePayloadModel respModel = pinOnMobile.sendPin(getNewPin(),getOtp(),pinOnMobile.getSuccessCallback(), pinOnMobile.getFailureCallback());
-                if(respModel != null){
-                    runOnUiThread(this::dismissLoadingDialog);
+            if (getNewPin().equalsIgnoreCase(getConfirmNewPin())) {
+
+                ResponsePayloadModel respModel = pinOnMobile.sendPin(getNewPin(), getOtp(), pinOnMobile.getSuccessCallback(), pinOnMobile.getFailureCallback());
+                if (respModel != null) {
+                   // runOnUiThread(this::dismissLoadingDialog);
                 }
-          PinOnMobileActivity.this.finish();
+                //PinOnMobileActivity.this.finish();
 
-            }else {
+            } else {
                 currentPage = 0;
                 Snackbar.make(binding.pinpadView, "The two pins are not the same", Snackbar.LENGTH_LONG)
                         .show();
@@ -132,7 +143,7 @@ public class PinOnMobileActivity extends AppCompatActivity {
         } catch (Exception e) {
             Log.d(LOG_TAG, e.getMessage());
             e.printStackTrace();
-            pinOnMobile.getFailureCallback().onError(new GenericResponse("",e.getMessage()));
+            pinOnMobile.getFailureCallback().onError(new GenericResponse("", e.getMessage()));
             PinOnMobileActivity.this.finish();
         }
     }
@@ -144,10 +155,10 @@ public class PinOnMobileActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if(currentPage == 0){
-            pinOnMobile.getFailureCallback().onError(new GenericResponse("","User exited before finishing"));
+        if (currentPage == 0) {
+            pinOnMobile.getFailureCallback().onError(new GenericResponse("", "User exited before finishing"));
             PinOnMobileActivity.this.finish();
-        }else {
+        } else {
             currentPage--;
             binding.pinpadView.clear();
             binding.pinpadView.setPromptText(pages.get(currentPage));
@@ -157,23 +168,11 @@ public class PinOnMobileActivity extends AppCompatActivity {
     //show loading dialog
     public void showLoadingDialog() {
         System.out.println("LOADING...........");
-        loadingFragment = new LoadingFragment();
-        FragmentManager fragmentManager = this.getSupportFragmentManager();
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-        // For a little polish, specify a transition animation
-        transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-        // To make it fullscreen, use the 'content' root view as the container
-        // for the fragment, which is always the root view for the activity
-        if(!loadingFragment.isAdded()) {
-            transaction.add(android.R.id.content, loadingFragment)
-                    .addToBackStack(null).commit();
-        }
     }
 
     public void dismissLoadingDialog() {
-        if (loadingFragment != null) {
-            loadingFragment.dismissAllowingStateLoss();
-        }
+
+        binding.progressOverlay.setVisibility(View.GONE);
     }
 
 
