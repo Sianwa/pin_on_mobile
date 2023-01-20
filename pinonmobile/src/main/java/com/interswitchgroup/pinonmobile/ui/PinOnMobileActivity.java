@@ -6,6 +6,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -122,30 +123,41 @@ public class PinOnMobileActivity extends AppCompatActivity {
 
 
     private void setPin() {
-        try {
-            Log.d(LOG_TAG, "SETTING PIN....");
-            runOnUiThread(() ->  binding.progressOverlay.setVisibility(View.VISIBLE));
 
-            if (getNewPin().equalsIgnoreCase(getConfirmNewPin())) {
+        Log.d(LOG_TAG, "SETTING PIN....");
+        runOnUiThread(this::showLoadingDialog);
 
-                ResponsePayloadModel respModel = pinOnMobile.sendPin(getNewPin(), getOtp(), pinOnMobile.getSuccessCallback(), pinOnMobile.getFailureCallback());
-                if (respModel != null) {
-                   // runOnUiThread(this::dismissLoadingDialog);
+        final Handler handler = new Handler();
+        Runnable runnable = new Runnable() {
+            public void run() {
+                // Your function here
+                try {
+
+                    if (getNewPin().equalsIgnoreCase(getConfirmNewPin())) {
+
+                        ResponsePayloadModel respModel = pinOnMobile.sendPin(getNewPin(), getOtp(), pinOnMobile.getSuccessCallback(), pinOnMobile.getFailureCallback());
+                        if (respModel != null) {
+                             runOnUiThread(() -> dismissLoadingDialog());
+                        }
+                        PinOnMobileActivity.this.finish();
+
+                    } else {
+                        currentPage = 0;
+                        Snackbar.make(binding.pinpadView, "The two pins are not the same", Snackbar.LENGTH_LONG)
+                                .show();
+                    }
+
+                } catch (Exception e) {
+                    Log.d(LOG_TAG, e.getMessage());
+                    e.printStackTrace();
+                    pinOnMobile.getFailureCallback().onError(new GenericResponse("", e.getMessage()));
+                    PinOnMobileActivity.this.finish();
                 }
-                //PinOnMobileActivity.this.finish();
 
-            } else {
-                currentPage = 0;
-                Snackbar.make(binding.pinpadView, "The two pins are not the same", Snackbar.LENGTH_LONG)
-                        .show();
             }
+        };
 
-        } catch (Exception e) {
-            Log.d(LOG_TAG, e.getMessage());
-            e.printStackTrace();
-            pinOnMobile.getFailureCallback().onError(new GenericResponse("", e.getMessage()));
-            PinOnMobileActivity.this.finish();
-        }
+        handler.post(runnable);
     }
 
     @Override
@@ -167,11 +179,10 @@ public class PinOnMobileActivity extends AppCompatActivity {
 
     //show loading dialog
     public void showLoadingDialog() {
-        System.out.println("LOADING...........");
+        binding.progressOverlay.setVisibility(View.VISIBLE);
     }
 
     public void dismissLoadingDialog() {
-
         binding.progressOverlay.setVisibility(View.GONE);
     }
 
