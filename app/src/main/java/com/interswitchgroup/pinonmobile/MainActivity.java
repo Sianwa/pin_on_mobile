@@ -52,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
                         "deee79ba-f912-11eb-9a03-0242ac130003");
 
                Account account = new Account("4726390060000056","1410916", "");
+
                 //add activity indicator
                 PinOnMobile pinOnMobile = PinOnMobile.getInstance(MainActivity.this,institution,account);
                 pinOnMobile.setPin(

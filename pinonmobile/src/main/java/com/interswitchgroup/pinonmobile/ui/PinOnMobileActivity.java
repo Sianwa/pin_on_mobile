@@ -142,12 +142,14 @@ public class PinOnMobileActivity extends AppCompatActivity {
                         PinOnMobileActivity.this.finish();
 
                     } else {
+                        runOnUiThread(() -> dismissLoadingDialog());
                         currentPage = 0;
                         Snackbar.make(binding.pinpadView, "The two pins are not the same", Snackbar.LENGTH_LONG)
                                 .show();
                     }
 
                 } catch (Exception e) {
+                    runOnUiThread(() -> dismissLoadingDialog());
                     Log.d(LOG_TAG, e.getMessage());
                     e.printStackTrace();
                     pinOnMobile.getFailureCallback().onError(new GenericResponse("", e.getMessage()));
