@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
 
                 //add activity indicator
                 PinOnMobile pinOnMobile = PinOnMobile.getInstance(MainActivity.this,institution,account);
-                pinOnMobile.setPin(
+                pinOnMobile.changePin(
                         response -> {
                             activityIndicator.setVisibility(View.GONE);
 
@@ -69,9 +69,10 @@ public class MainActivity extends AppCompatActivity {
                         error -> {
                             activityIndicator.setVisibility(View.GONE);
                             Snackbar
-                                    .make(view, error.getMessage(), Snackbar.LENGTH_LONG)
+                                    .make(view, "ERROR::"+error.getMessage(), Snackbar.LENGTH_LONG)
                                     .show();
-                        });
+                        }
+                );
             } catch (Exception e) {
                 activityIndicator.setVisibility(View.GONE);
                 e.printStackTrace();

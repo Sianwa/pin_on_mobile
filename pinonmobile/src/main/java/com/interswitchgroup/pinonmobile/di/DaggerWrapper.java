@@ -19,7 +19,7 @@ public class DaggerWrapper {
     private static void initComponent(Context context, Institution institution) throws PackageManager.NameNotFoundException {
         ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
         String baseUrl = String.valueOf(ai.metaData.get("interswitch-kenya-limited.pin_on_mobile.base_url"));
-
+        System.out.println("BASE_URL::"+baseUrl);
         mComponent = DaggerMainComponent
                 .builder()
                 .netModule(new NetModule(baseUrl, institution.getClientId(), institution.getClientSecret(),institution.getInstitutionId() ))

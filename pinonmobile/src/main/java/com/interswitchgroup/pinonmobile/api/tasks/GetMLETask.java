@@ -6,9 +6,6 @@ import com.interswitchgroup.pinonmobile.api.models.GenerateMLEKeyResponse;
 import com.interswitchgroup.pinonmobile.api.services.GetMLEKey;
 
 import java.io.IOException;
-
-import javax.inject.Inject;
-
 import retrofit2.Retrofit;
 
 public class GetMLETask extends AsyncTask<String, Void, String> {
