@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
                         "deee79ba-f912-11eb-9a03-0242ac130003");
 
                //Account account = new Account("4726390090000050","1410914", "");//DEBIT
-               Account account = new Account("4167040082556173","556173", "2506"); //CREDIT
+               Account account = new Account(false, "4444111"); //CREDIT
 
                 //add activity indicator
                 PinOnMobile pinOnMobile = PinOnMobile.getInstance(MainActivity.this,institution,account);

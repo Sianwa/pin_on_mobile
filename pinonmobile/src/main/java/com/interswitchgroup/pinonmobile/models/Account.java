@@ -7,17 +7,11 @@ public class Account implements Serializable {
     private String accountNumber;
     private String cardSerialNumber;
     private String expiryDate;
+    private Boolean isDebit;
 
-
-    public Account(String accountNumber, String cardSerialNumber) {
-        this.accountNumber = accountNumber;
+    public Account(Boolean isDebit, String cardSerialNumber) {
+        this.isDebit = isDebit;
         this.cardSerialNumber = cardSerialNumber;
-    }
-
-    public Account(String accountNumber, String cardSerialNumber, String expiryDate) {
-        this.accountNumber = accountNumber;
-        this.cardSerialNumber = cardSerialNumber;
-        this.expiryDate = expiryDate;
     }
 
     public String getAccountNumber() {
@@ -42,5 +36,13 @@ public class Account implements Serializable {
 
     public void setExpiryDate(String expiryDate) {
         this.expiryDate = expiryDate;
+    }
+
+    public Boolean getIsDebit() {
+        return isDebit;
+    }
+
+    public void setIsDebit(Boolean debit) {
+        isDebit = debit;
     }
 }

@@ -194,15 +194,12 @@ public class PinOnMobile implements Serializable {
 
         InstitutionModel institutionModel = new InstitutionModel("www.google.com", 54);
         AccountModel accountModel = new AccountModel(
-                singletonPinOnMobileInstance.account.getAccountNumber(),
                 singletonPinOnMobileInstance.account.getCardSerialNumber(),
-                singletonPinOnMobileInstance.account.getExpiryDate(),
-                ""
+                singletonPinOnMobileInstance.account.getIsDebit()
                 );
         InitializationRequestPayload requestPayload = new InitializationRequestPayload(institutionModel,accountModel);
 
         InitializationResponseModel responseModel = new InitializeService(requestPayload, singletonPinOnMobileInstance.retrofit).execute().get();
-        System.out.println("CALLBACK URL::"+responseModel.callbackUrl);
 
         try{
             Intent intent = new Intent(activity, BrowserActivity.class);
@@ -243,7 +240,7 @@ public class PinOnMobile implements Serializable {
                                 }
                                 if(!isReceivedMessage()){
                                     setReceivedMessage(true);
-                                    if(mqttResponseModel.getMessage().equals("success")) {
+                                    if(mqttResponseModel.getCode().equals("0")) {
                                         Gson gson = new Gson();
                                         ResponsePayloadModel successModel = gson.fromJson(String.valueOf(mqttResponseModel), ResponsePayloadModel.class);
                                         successCallback.onSuccess(successModel);
