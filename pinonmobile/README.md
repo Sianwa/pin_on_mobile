@@ -59,11 +59,11 @@ PinOnMobile pinOnMobile = PinOnMobile.getInstance(MainActivity.this,institution,
 
 // Call the desired method
 
- pinOnMobile.changePin(
+pinOnMobile.changePin(
                         response -> {
                             progressIndicator.setVisibility(View.GONE);
 
-                            Snackbar.make(view, "Set Pin correctly occurred", Snackbar.LENGTH_LONG)
+                            Snackbar.make(view, "Pin Changed Successfully", Snackbar.LENGTH_LONG)
                                     .show();
                         },
                         error -> {
