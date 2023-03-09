@@ -32,17 +32,47 @@ dataBinding {
 
 ## Usage examples
 ```java
-// create an institution class
-Institution institution = new Institution(clientId
-        ,clientSecret,institutionId,
-        rsaPubKeyString,rsaPrivateKeyString,keyId);
+// create an instance of the institution class
+
+Institution institution = new Institution(
+                                   clientId,
+                                   clientSecret,
+                                   institutionId,
+                                   rsaPubKeyString,
+                                   rsaPrivateKeyString,
+                                   keyId);
+                                   
 // create an instance of the clients account
-Account account = new Account(accountNumber,cardSerialNumber);
+
+Account account = new Account(isDebit, cardSerialNumber);
+
+/*
+ * cardSerialNumber is a String value.
+ *
+ * isDebit is a boolean value(true/false) passed to show 
+ * whether the serial number provided is for a debit card or not.
+ */
 
 // The instance of an activity that will be active until the process is completed
+
 PinOnMobile pinOnMobile = PinOnMobile.getInstance(MainActivity.this,institution,account);
 
-// call the desired method
+// Call the desired method
+
+pinOnMobile.changePin(
+                        response -> {
+                            progressIndicator.setVisibility(View.GONE);
+
+                            Snackbar.make(view, "Pin Changed Successfully", Snackbar.LENGTH_LONG)
+                                    .show();
+                        },
+                        error -> {
+                            progressIndicator.setVisibility(View.GONE);
+                            
+                            Snackbar.make(view, "ERROR::"+error.getMessage(), Snackbar.LENGTH_LONG)
+                                    .show();
+                        }
+                );
 
 ```
 
