@@ -95,10 +95,11 @@ public class PinOnMobile implements Serializable {
             DaggerWrapper.getComponent(activity,institution).inject(singletonPinOnMobileInstance);
         }
         // i have to always get a different session and mle each time we initialize
-        singletonPinOnMobileInstance.initializeIdentityServiceConfig();
+        //singletonPinOnMobileInstance.initializeIdentityServiceConfig();
         return singletonPinOnMobileInstance;
     }
 
+    @Deprecated
     private void initializeIdentityServiceConfig() throws Exception {
         this.keys  = new Keys();
         String mleKeyResponse = new GetMLETask(singletonPinOnMobileInstance.retrofit)
@@ -124,6 +125,7 @@ public class PinOnMobile implements Serializable {
         }
     }
 
+    @Deprecated
     public ResponsePayloadModel sendPin(String pin, String otp, SuccessCallback successCallback, FailureCallback failureCallback) throws Exception {
         Log.d("PinOnMobile", "SENDING OTP AND PIN BLOCK....");
         String desKey = this.keys.getSessionKey();
@@ -137,12 +139,13 @@ public class PinOnMobile implements Serializable {
         if(successModel.code != "0"){
             failureCallback.onError(new GenericResponse(successModel.code,successModel.message));
         }else{
-            successCallback.onSuccess(successModel);
+            //successCallback.onSuccess(successModel);
         }
         return successModel;
 
     }
 
+    @Deprecated
     public void generateOtp() throws Exception {
         Log.d("PinOnMobile","GENERATING OTP....");
         GeneratePinSelectOTPPayload generatePinSelectOTPPayload = new GeneratePinSelectOTPPayload();
@@ -174,6 +177,7 @@ public class PinOnMobile implements Serializable {
 
     }
 
+    @Deprecated
     public void setPin(final SuccessCallback successCallback, final FailureCallback failureCallback){
         this.failureCallback = failureCallback;
         this.successCallback = successCallback;
@@ -188,6 +192,7 @@ public class PinOnMobile implements Serializable {
         }
     }
 
+
     public void changePin(final SuccessCallback successCallback, final FailureCallback failureCallback) throws Exception{
         this.failureCallback = failureCallback;
         this.successCallback = successCallback;
@@ -198,7 +203,6 @@ public class PinOnMobile implements Serializable {
                 singletonPinOnMobileInstance.account.getIsDebit()
                 );
         InitializationRequestPayload requestPayload = new InitializationRequestPayload(institutionModel,accountModel);
-
         InitializationResponseModel responseModel = new InitializeService(requestPayload, singletonPinOnMobileInstance.retrofit).execute().get();
 
         try{
@@ -242,13 +246,15 @@ public class PinOnMobile implements Serializable {
                                     setReceivedMessage(true);
                                     if(mqttResponseModel.getCode().equals("0")) {
                                         Gson gson = new Gson();
-                                        ResponsePayloadModel successModel = gson.fromJson(String.valueOf(mqttResponseModel), ResponsePayloadModel.class);
+                                        GenericResponse successModel = gson.fromJson(new String(message.getPayload()), GenericResponse.class);
                                         successCallback.onSuccess(successModel);
                                     }else{
+                                        System.out.println("ERROR::");
                                         failureCallback.onError(new GenericResponse("",mqttResponseModel.getMessage()));
                                     }
                                 }
                             } catch (Exception e) {
+                                System.out.println("ERROR::"+e.getMessage());
                                 if(!isReceivedMessage()) {
                                     failureCallback.onError(new GenericResponse("", new String(message.getPayload())));
                                 }
