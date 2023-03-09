@@ -205,69 +205,71 @@ public class PinOnMobile implements Serializable {
         InitializationRequestPayload requestPayload = new InitializationRequestPayload(institutionModel,accountModel);
         InitializationResponseModel responseModel = new InitializeService(requestPayload, singletonPinOnMobileInstance.retrofit).execute().get();
 
-        try{
-            Intent intent = new Intent(activity, BrowserActivity.class);
-            intent.putExtra("url", responseModel.callbackUrl);
-            intent.putExtra("mqttServer", "tcp://testmerchant.interswitch-ke.com:1883");
-            intent.putExtra("topic", "identity/"+responseModel.uuid);
-            activity.startActivity(intent);
-        }
-        catch(Exception e){
-            System.out.println(e.getMessage());
-        }
+        if(responseModel.responseCode.equals("0")){
+            try{
+                Intent intent = new Intent(activity, BrowserActivity.class);
+                intent.putExtra("url", responseModel.callbackUrl);
+                intent.putExtra("mqttServer", "tcp://testmerchant.interswitch-ke.com:1883");
+                intent.putExtra("topic", "identity/"+responseModel.uuid);
+                activity.startActivity(intent);
+            }
+            catch(Exception e){
+                System.out.println(e.getMessage());
+            }
 
-        try {
-            final MqttClient sampleClient = new MqttClient("tcp://testmerchant.interswitch-ke.com:1883", UUID.randomUUID().toString(), new MemoryPersistence());
-            MqttConnectOptions connOpts = new MqttConnectOptions();
-            connOpts.setCleanSession(true);
-            connOpts.setAutomaticReconnect(true);
-            System.out.println("Connecting to broker: " + "tcp://testmerchant.interswitch-ke.com:1883");
-            sampleClient.connect(connOpts);
-            System.out.println("Connected");
-            sampleClient.subscribe("identity/"+responseModel.uuid, new IMqttMessageListener() {
-                @Override
-                public void messageArrived(String topic, final MqttMessage message) throws Exception {
-                    // message Arrived!
-                    System.out.println("Message: " + topic + " : " + new String(message.getPayload()));
-                    /**
-                     * Run on ui thread otherwise utakua mwingi wa machozi
-                     */
-                    activity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                MQTTResponseModel mqttResponseModel = new ObjectMapper()
-                                        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                                        .readValue(new String(message.getPayload()), MQTTResponseModel.class);
-                                if (mqttResponseModel.getCode() == null || mqttResponseModel.getCode().isEmpty()) {
-                                    throw new Exception("Invalid response");
-                                }
-                                if(!isReceivedMessage()){
-                                    setReceivedMessage(true);
-                                    if(mqttResponseModel.getCode().equals("0")) {
-                                        Gson gson = new Gson();
-                                        GenericResponse successModel = gson.fromJson(new String(message.getPayload()), GenericResponse.class);
-                                        successCallback.onSuccess(successModel);
-                                    }else{
-                                        System.out.println("ERROR::");
-                                        failureCallback.onError(new GenericResponse("",mqttResponseModel.getMessage()));
+            try {
+                final MqttClient sampleClient = new MqttClient("tcp://testmerchant.interswitch-ke.com:1883", UUID.randomUUID().toString(), new MemoryPersistence());
+                MqttConnectOptions connOpts = new MqttConnectOptions();
+                connOpts.setCleanSession(true);
+                connOpts.setAutomaticReconnect(true);
+                System.out.println("Connecting to broker: " + "tcp://testmerchant.interswitch-ke.com:1883");
+                sampleClient.connect(connOpts);
+                System.out.println("Connected");
+                sampleClient.subscribe("identity/"+responseModel.uuid, new IMqttMessageListener() {
+                    @Override
+                    public void messageArrived(String topic, final MqttMessage message) throws Exception {
+                        // message Arrived!
+                        System.out.println("Message: " + topic + " : " + new String(message.getPayload()));
+
+                        activity.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    MQTTResponseModel mqttResponseModel = new ObjectMapper()
+                                            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                                            .readValue(new String(message.getPayload()), MQTTResponseModel.class);
+                                    if (mqttResponseModel.getCode() == null || mqttResponseModel.getCode().isEmpty()) {
+                                        throw new Exception("Invalid response");
+                                    }
+                                    if(!isReceivedMessage()){
+                                        setReceivedMessage(true);
+                                        if(mqttResponseModel.getCode().equals("0")) {
+                                            Gson gson = new Gson();
+                                            GenericResponse successModel = gson.fromJson(new String(message.getPayload()), GenericResponse.class);
+                                            successCallback.onSuccess(successModel);
+                                        }else{
+                                            System.out.println("ERROR::");
+                                            failureCallback.onError(new GenericResponse("",mqttResponseModel.getMessage()));
+                                        }
+                                    }
+                                } catch (Exception e) {
+                                    System.out.println("ERROR::"+e.getMessage());
+                                    if(!isReceivedMessage()) {
+                                        failureCallback.onError(new GenericResponse("", new String(message.getPayload())));
                                     }
                                 }
-                            } catch (Exception e) {
-                                System.out.println("ERROR::"+e.getMessage());
-                                if(!isReceivedMessage()) {
-                                    failureCallback.onError(new GenericResponse("", new String(message.getPayload())));
-                                }
                             }
-                        }
-                    });
-                }
-            });
+                        });
+                    }
+                });
+            }
+            catch (MqttException me) {
+                throw new Exception(me);
+            }
         }
-        catch (MqttException me) {
-            throw new Exception(me);
+        else{
+            failureCallback.onError(new GenericResponse(responseModel.responseCode,responseModel.responseMessage));
         }
-
     }
 
 }
